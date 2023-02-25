@@ -1,3 +1,7 @@
+#kasim Jeylani
+#02/21/23
+#CNE340
+
 import mysql.connector
 import time
 import json
@@ -10,7 +14,7 @@ import html2text
 # You may need to edit the connect function based on your local settings.#I made a password for my database because it is important to do so. Also make sure MySQL server is running or it will not connect
 def connect_to_sql():
     conn = mysql.connector.connect(user='root', password='',
-                                   host='127.0.0.1', database='cne340')
+                                   host='127.0.0.1', database='jobhunter')
     return conn
 
 
@@ -30,27 +34,33 @@ def query_sql(cursor, query):
     return cursor
 
 
-# Add a new job
+# Add a new job (needed some changes)
 def add_new_job(cursor, jobdetails):
     # extract all required columns
     description = html2text.html2text(jobdetails['description'])
     date = jobdetails['publication_date'][0:10]
-    query = cursor.execute("INSERT INTO jobs( Description, Created_at " ") "
-               "VALUES(%s,%s)", (  description, date))
+    job_id = jobdetails['id']
+    company = jobdetails['company_name']
+    url = jobdetails['url']
+    title = jobdetails['title']
+    query = cursor.execute("INSERT INTO jobs( Description, Created_at " ", job_id, company, url, title  ) "
+               "VALUES(%s,%s,%s,%s,%s,%s)", (description, date, job_id, company, url, title))
      # %s is what is needed for Mysqlconnector as SQLite3 uses ? the Mysqlconnector uses %s
     return query_sql(cursor, query)
 
 
-# Check if new job
+# Check if new job (needed a change)
 def check_if_job_exists(cursor, jobdetails):
     ##Add your code here
-    query = "UPDATE"
+    kasim = jobdetails['id']
+    query = "SELECT * FROM jobs WHERE job_id = \"%s\"" % kasim
     return query_sql(cursor, query)
 
-# Deletes job
+# Deletes job(needed a change)
 def delete_job(cursor, jobdetails):
     ##Add your code here
-    query = "UPDATE"
+    kasim = jobdetails ['id']
+    query = "DELETE * FROM jobs WHERE job_id = \"%s\" " % kasim
     return query_sql(cursor, query)
 
 
@@ -70,7 +80,7 @@ def jobhunt(cursor):
     # print(jobpage)
     add_or_delete_job(jobpage, cursor)
 
-
+# Added some code to make it work
 def add_or_delete_job(jobpage, cursor):
     # Add your code here to parse the job page
     for jobdetails in jobpage['jobs']:  # EXTRACTS EACH JOB FROM THE JOB LIST. It errored out until I specified jobs. This is because it needs to look at the jobs dictionary from the API. https://careerkarma.com/blog/python-typeerror-int-object-is-not-iterable/
@@ -79,10 +89,20 @@ def add_or_delete_job(jobpage, cursor):
         is_job_found = len(
         cursor.fetchall()) > 0  # https://stackoverflow.com/questions/2511679/python-number-of-rows-affected-by-cursor-executeselect
         if is_job_found:
+            print("job found: " +
+                  jobdetails["title"] +
+                  "from " + jobdetails["company_name"] +
+                  ", Created at: " + jobdetails["publication_date"])
 
         else:
             # INSERT JOB
+            print("New job is found: " +
+                  jobdetails["title"] +
+                  "from " + jobdetails["company_name"] +
+                  ", Created at: " + jobdetails["publication_date"])
+            add_new_job(cursor, jobdetails)
             # Add in your code here to notify the user of a new posting. This code will notify the new user
+
 
 
 
